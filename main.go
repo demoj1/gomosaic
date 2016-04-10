@@ -16,11 +16,11 @@ import (
 )
 
 type ImageInfo struct {
-	FilePaht string  `json:"file"`
-	R        float64 `json:"red"`
-	G        float64 `json:"green"`
-	B        float64 `json:"blue"`
+	FilePaht string
 	Img      Image
+	R        float64
+	G        float64
+	B        float64
 }
 
 func main() {
