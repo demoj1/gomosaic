@@ -1,9 +1,6 @@
 package main
 
 import (
-	//"encoding/json"
-	//"fmt"
-	//"github.com/diman3241/ImageMosaic/img"
 	"bytes"
 	"flag"
 	"fmt"
