@@ -33,8 +33,8 @@ func main() {
 	grid_width := flag.Uint("grid-w", 50, "The width of the grid cell.")
 	grid_height := flag.Uint("grid-h", 50, "The height of the grid cell.")
 
-	src_file := flag.String("src-img", "src", "Source image file.")
-	out_file := flag.String("out-img", "out", "Name out file.")
+	src_file := flag.String("src-img", "src.jpg", "Source image file.")
+	out_file := flag.String("out-img", "out.jpg", "Name out file.")
 
 	find_dir := flag.String("img-dir", "images", "The directory in which to search for photos mosaicking.")
 
