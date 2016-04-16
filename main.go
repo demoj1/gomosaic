@@ -63,8 +63,8 @@ func main() {
 
 	wg.Wait()
 	createMosaic(srcImg, outImage, int(*gridWidth), int(*gridHeight), imgInfos)
-	save_file, _ := os.Create(*outFile)
-	jpeg.Encode(save_file, outImage, &jpeg.Options{jpeg.DefaultQuality})
+	saveFile, _ := os.Create(*outFile)
+	jpeg.Encode(saveFile, outImage, &jpeg.Options{jpeg.DefaultQuality})
 }
 
 func createMosaic(src Image, out *RGBA, gw, gh int, info []ImageInfo) {
@@ -93,8 +93,8 @@ func createMosaic(src Image, out *RGBA, gw, gh int, info []ImageInfo) {
 			}
 		}
 
-		cur_S := y
-		fmt.Printf("Progress: %-10v\r", (cur_S*100)/allS)
+		curS := y
+		fmt.Printf("Progress: %-10v\r", (curS*100)/allS)
 	}
 }
 
@@ -110,22 +110,22 @@ func randInt(min int, max int) int {
 func minDist(src Image, rect Rectangle, info []ImageInfo) ImageInfo {
 	sr, sg, sb := avgImg(src, rect)
 
-	min_d := 100000.0
+	minD := 100000.0
 	i1 := ImageInfo{}
 
-	min_d2 := 100000.0
+	minD2 := 100000.0
 	i2 := ImageInfo{}
 
 	for _, v := range info {
 		d := dist(sr, sg, sb, v.R, v.G, v.B)
 
-		if d < min_d {
-			min_d = d
+		if d < minD {
+			minD = d
 			i1 = v
 		}
 
-		if d < min_d2 && v != i1 {
-			min_d2 = d
+		if d < minD2 && v != i1 {
+			minD2 = d
 			i2 = v
 		}
 	}
@@ -133,9 +133,9 @@ func minDist(src Image, rect Rectangle, info []ImageInfo) ImageInfo {
 	num := randInt(0, 2)
 	if num == 0 {
 		return i1
-	} else {
-		return i2
 	}
+
+	return i2
 }
 
 func avgImg(img Image, rect Rectangle) (r, g, b float64) {
