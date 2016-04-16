@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
-	"github.com/nfnt/resize"
 	. "image"
 	"image/jpeg"
 	"io/ioutil"
@@ -13,6 +12,8 @@ import (
 	"os"
 	"sync"
 	"time"
+
+	"github.com/nfnt/resize"
 )
 
 type ImageInfo struct {
@@ -24,55 +25,55 @@ type ImageInfo struct {
 }
 
 func main() {
-	out_width := flag.Uint("out-w", 1000, "Out image width.")
-	out_height := flag.Uint("out-h", 1000, "Out image height.")
+	outWidth := flag.Uint("out-w", 1000, "Out image width.")
+	outHeight := flag.Uint("out-h", 1000, "Out image height.")
 
-	grid_width := flag.Uint("grid-w", 50, "The width of the grid cell.")
-	grid_height := flag.Uint("grid-h", 50, "The height of the grid cell.")
+	gridWidth := flag.Uint("grid-w", 50, "The width of the grid cell.")
+	gridHeight := flag.Uint("grid-h", 50, "The height of the grid cell.")
 
-	src_file := flag.String("src-img", "src.jpg", "Source image file.")
-	out_file := flag.String("out-img", "out.jpg", "Name out file.")
+	srcFile := flag.String("src-img", "src.jpg", "Source image file.")
+	outFile := flag.String("out-img", "out.jpg", "Name out file.")
 
-	find_dir := flag.String("img-dir", "images", "The directory in which to search for photos mosaicking.")
+	findDir := flag.String("img-dir", "images", "The directory in which to search for photos mosaicking.")
 
 	flag.Parse()
 
-	files := getFiles(*find_dir)
-	out_files := make(chan string, 10)
-	proc_image := make(chan ImageInfo, 10)
+	files := getFiles(*findDir)
+	outFiles := make(chan string, 10)
+	procImage := make(chan ImageInfo, 10)
 
-	go transferFiles(out_files, *find_dir, files)
+	go transferFiles(outFiles, *findDir, files)
 
 	var wg sync.WaitGroup
 	for i := 0; i < 10; i++ {
-		go proccessImgFile(out_files, proc_image, *grid_width, *grid_height, &wg)
+		go proccessImgFile(outFiles, procImage, *gridWidth, *gridHeight, &wg)
 	}
 
-	src_img := loadImg(*src_file)
-	src_img = resize.Resize(*out_width, *out_height, src_img, resize.Lanczos3)
+	srcImg := loadImg(*srcFile)
+	srcImg = resize.Resize(*outWidth, *outHeight, srcImg, resize.Lanczos3)
 
-	out_image := NewRGBA(Rect(0, 0, int(*out_width), int(*out_height)))
+	outImage := NewRGBA(Rect(0, 0, int(*outWidth), int(*outHeight)))
 
-	img_infos := make([]ImageInfo, 1)
+	imgInfos := make([]ImageInfo, 1)
 	go func(in <-chan ImageInfo) {
 		for info := range in {
-			img_infos = append(img_infos, info)
+			imgInfos = append(imgInfos, info)
 		}
-	}(proc_image)
+	}(procImage)
 
 	wg.Wait()
-	createMosaic(src_img, out_image, int(*grid_width), int(*grid_height), img_infos)
-	save_file, _ := os.Create(*out_file)
-	jpeg.Encode(save_file, out_image, &jpeg.Options{jpeg.DefaultQuality})
+	createMosaic(srcImg, outImage, int(*gridWidth), int(*gridHeight), imgInfos)
+	save_file, _ := os.Create(*outFile)
+	jpeg.Encode(save_file, outImage, &jpeg.Options{jpeg.DefaultQuality})
 }
 
 func createMosaic(src Image, out *RGBA, gw, gh int, info []ImageInfo) {
 	fmt.Println("Start create mosaic")
-	all_S := src.Bounds().Size().Y
+	allS := src.Bounds().Size().Y
 
 	for y := 0; y < src.Bounds().Size().Y; y += gh {
 		for x := 0; x < src.Bounds().Size().X; x += gw {
-			min_dist := minDist(src, Rectangle{
+			dist := minDist(src, Rectangle{
 				Min: Point{
 					X: x,
 					Y: y},
@@ -80,20 +81,20 @@ func createMosaic(src Image, out *RGBA, gw, gh int, info []ImageInfo) {
 					X: x + gw,
 					Y: y + gh}}, info)
 
-			ok_img := min_dist.Img
-			if ok_img == nil {
+			okImg := dist.Img
+			if okImg == nil {
 				continue
 			}
 
 			for yy := y; yy < y+gh; yy++ {
 				for xx := x; xx < x+gw; xx++ {
-					out.Set(xx, yy, ok_img.At(xx-x, yy-y))
+					out.Set(xx, yy, okImg.At(xx-x, yy-y))
 				}
 			}
 		}
 
 		cur_S := y
-		fmt.Printf("Progress: %-10v\r", (cur_S*100)/all_S)
+		fmt.Printf("Progress: %-10v\r", (cur_S*100)/allS)
 	}
 }
 
